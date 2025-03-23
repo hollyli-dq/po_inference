@@ -2,9 +2,9 @@
 
 This project implements a Bayesian framework for inferring partial orders from observed rankings using Markov Chain Monte Carlo (MCMC) methods. The implementation includes data generation, inference, and visualization tools for analyzing partial order relationships.
 
-## Mathematical Framework
+## The Bayesian Partial Order 
 
-### Partial Order Model
+### Partial Order
 
 A partial order is a binary relation $\preceq$ over a set of items that satisfies:
 
@@ -19,31 +19,37 @@ The model uses a latent space representation where:
 - Each item $j$ has a K-dimensional latent position $U_j \in \mathbb{R}^K$
 - The correlation between dimensions is controlled by parameter $\rho$
 - The transformed latent positions $\eta_j$ are given by:
-  $$
-  \eta_j = U_j + \alpha_j
-  $$
+  $  \eta_j = U_j + \alpha_j$
 
-where $\alpha_i$ represents covariate effects.
+#### Theorem(Partial Order Model)
+
+For $\alpha$ and $\Sigma_\rho$ defined above, if we take
+
+- $U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)$, independent for each $j \in M$,
+- $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \,1_K^T$, and
+- $y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)$,
 
 ### MCMC Inference
+The posterior distribution is given by:
 
-The posterior distribution is sampled using MCMC with:
+$$
+\pi(\rho, U, \beta \mid Y) \propto \pi(\rho)\,\pi(\beta)\,\pi(U \mid \rho)\,p\Bigl(Y \mid h\bigl(\eta(U,\beta)\bigr)\Bigr).
+$$
 
-- Prior distributions:
-  - $\rho \sim \text{Beta}(1, \rho_\text{prior})$
-  - $\tau \sim \text{Uniform}(0, 1)$
-  - $K \sim \text{Truncated-Poisson}(\lambda)$
-- The poesterior function is:
-  $$
-  π(ρ,U,β∣Y)∝π(ρ)π(β)π(U∣ρ)p(Y∣h(η(U,β)))
-  $$
+We sample from this posterior using MCMC. Specific update steps include:
 
+- Updating $\rho$$:Using a Beta prior (e.g., $$\text{Beta}(1, \rho_\text{prior})$$) with a mean around 0.9.
+- Updating $p_{\mathrm{noise}}$: Using a Metropolis step with a Beta prior (e.g., $\text{Beta}(1, 9)$) with a mean around 0.1.
+- Updating the latent positions $U$: Via a random-walk proposal given a row vector updated for each iteration.
+
+
+## Project structure
 ```
 .
 ├── config/
 │   └── mcmc_config.yaml
+│   └── data_generator_config.yaml
 ├── data/
-│   └── sample_data.yaml
 ├── notebook/
 │   └── mcmc_simulation.ipynb
 ├── src/
@@ -58,8 +64,8 @@ The posterior distribution is sampled using MCMC with:
 │   │   └── generation_utils.py
 │   └── visualization/
 │       └── po_plot.py
-
 ├── requirements.txt
+├── README.md.txt
 └── setup.py
 ```
 
@@ -85,17 +91,35 @@ The posterior distribution is sampled using MCMC with:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/po_inference.git
+git clone https://github.com/hollyli-dq/po_inference.git
 cd po_inference
+```
+2. Create and Activate a Virtual Environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate
 ```
 
 2. Install dependencies:
-
 ```bash
 pip install -e .
 ```
 
 ## Usage
+
+### Test example
+
+run main.py in the model with the given test case, or go notebook to view the example.
+
+```bash
+# Run with default settings
+sh scripts/run.sh 
+```
+or 
+```bash
+# Run with default settings
+python scripts/main.py 
+```
 
 ### Command Line Interface
 
@@ -171,21 +195,29 @@ plotter.plot_mcmc_inferred_variables(mcmc_results, true_param, config)
 
 ## Configuration
 
-The `data_generator_config.yaml` file controls various aspects of data generation:
+The `mcmc_config.yaml` file controls various aspects of data generation:
 
 ```yaml
-generation:
-  n: 10  # Number of items
-  N: 100  # Number of observations
-  K: 2   # Number of dimensions
+data:
+  path: "data/sample_data.json"
+  output_dir: "output"
+  generate_data: true
+
+mcmc:
+  num_iterations: 2000
+  K: 3
+  update_probabilities:
+    rho: 0.2
+    noise: 0.3
+    U: 0.3
+    K: 0.2
 
 prior:
-  rho_prior: 1.0
-  noise_beta_prior: 1.0
-  K_prior: 1.0
+  rho_prior: 0.16667
+  noise_beta_prior: 9
+  mallow_ua: 10
+  K_prior: 3
 
-noise:
-  noise_option: "queue_jump"  # or "mallows_noise"
 ```
 
 ## License
