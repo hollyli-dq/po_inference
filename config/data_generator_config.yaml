@@ -1,0 +1,25 @@
+# Data generation configuration
+generation:
+  n: 10                    # Number of nodes/items in the partial order
+  N: 100                   # Number of total orders to sample from the partial order
+  K: 3                     # Number of dimensions for latent positions
+  p: 2                     # Number of covariates
+
+# Prior parameters for generation
+prior:
+  rho_prior: 0.16667      # Prior parameter for correlation
+  noise_beta_prior: 9     # Beta prior parameter for noise
+  mallow_ua: 10           # Mallows model parameter
+
+# Covariates configuration
+covariates:
+  beta_true: [0.5, -0.3]  # True regression coefficients
+
+# Noise configuration
+noise:
+  noise_option: "queue_jump"  # Options: "mallows_noise" or "queue_jump"
+
+# Output configuration
+output:
+  dir: "output"
+  filename: "generated_data.json" 
