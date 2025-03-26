@@ -1,6 +1,8 @@
 """
-Partial Order Inference package.
+Bayesian Partial Order Inference package.
 """
+
+__version__ = "0.1.0"
 
 from . import data
 from . import utils

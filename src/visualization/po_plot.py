@@ -396,3 +396,80 @@ class POPlot:
         plt.savefig(os.path.join(output_filepath, output_filename))
         print(f"[INFO] Saved MCMC parameter plots to '{output_filename}'")
         plt.show()
+
+    @staticmethod
+    def create_mcmc_trace_plot(
+        rho_trace: List[float],
+        prob_noise_trace: List[float],
+        mallow_theta_trace: List[float],
+        burn_in: int,
+        true_param: Dict[str, float] = None
+    ) -> plt.Figure:
+        """Create MCMC trace plots for parameters."""
+        fig, axes = plt.subplots(3, 1, figsize=(10, 12))
+        
+        # Plot rho trace
+        axes[0].plot(rho_trace, label='MCMC')
+        if true_param and 'rho_true' in true_param:
+            axes[0].axhline(y=true_param['rho_true'], color='r', linestyle='--', label='True')
+        axes[0].axvline(x=burn_in, color='k', linestyle='--', label='Burn-in')
+        axes[0].set_title('Rho Trace')
+        axes[0].set_xlabel('Iteration')
+        axes[0].set_ylabel('Value')
+        axes[0].legend()
+        
+        # Plot prob_noise trace
+        axes[1].plot(prob_noise_trace, label='MCMC')
+        if true_param and 'prob_noise_true' in true_param:
+            axes[1].axhline(y=true_param['prob_noise_true'], color='r', linestyle='--', label='True')
+        axes[1].axvline(x=burn_in, color='k', linestyle='--', label='Burn-in')
+        axes[1].set_title('Noise Probability Trace')
+        axes[1].set_xlabel('Iteration')
+        axes[1].set_ylabel('Value')
+        axes[1].legend()
+        
+        # Plot mallow_theta trace
+        axes[2].plot(mallow_theta_trace, label='MCMC')
+        axes[2].axvline(x=burn_in, color='k', linestyle='--', label='Burn-in')
+        axes[2].set_title('Mallows Theta Trace')
+        axes[2].set_xlabel('Iteration')
+        axes[2].set_ylabel('Value')
+        axes[2].legend()
+        
+        plt.tight_layout()
+        return fig
+
+    @staticmethod
+    def create_partial_order_plot(
+        h: np.ndarray,
+        index_to_item: Dict[int, str],
+        title: str = "Partial Order"
+    ) -> plt.Figure:
+        """Create a visualization of a partial order."""
+        fig, ax = plt.subplots(figsize=(10, 8))
+        
+        # Create directed graph
+        G = nx.DiGraph()
+        
+        # Add nodes
+        for idx, item in index_to_item.items():
+            G.add_node(item)
+        
+        # Add edges based on partial order matrix
+        n = h.shape[0]
+        for i in range(n):
+            for j in range(n):
+                if h[i, j] == 1:
+                    G.add_edge(index_to_item[i], index_to_item[j])
+        
+        # Use spring layout for node positioning
+        pos = nx.spring_layout(G)
+        
+        # Draw the graph
+        nx.draw(G, pos, ax=ax, with_labels=True, node_color='lightblue',
+                node_size=2000, font_size=10, font_weight='bold',
+                arrows=True, edge_color='gray')
+        
+        ax.set_title(title)
+        plt.tight_layout()
+        return fig

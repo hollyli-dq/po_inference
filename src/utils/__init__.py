@@ -1,5 +1,5 @@
 """
-Utility modules for partial order inference.
+Utility functions for partial order inference.
 """
 
 from .basic_utils import BasicUtils

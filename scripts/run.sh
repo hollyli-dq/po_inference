@@ -1,116 +1,59 @@
 #!/bin/bash
 
-# Run script for Bayesian Partial Order Inference
+# Run analysis script for partial order inference
 
 # Get the directory containing this script
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 
 # Change to project root directory
 cd "$PROJECT_ROOT"
+
+# Verify we're in the correct directory
+if [ ! -f "main.py" ]; then
+    echo "Error: Could not find main.py in the project root directory"
+    echo "Current directory: $(pwd)"
+    exit 1
+fi
 
 # Set up environment variables
 export PYTHONPATH="$PROJECT_ROOT:$PYTHONPATH"
 
 # Create necessary directories
-mkdir -p output/{figures/{mcmc_traces,partial_orders},results,logs}
+mkdir -p output/{figures/{mcmc_traces,partial_orders},results/{mcmc_samples,summary_stats},logs}
 
-# Parse command-line arguments
-GENERATE_DATA=false
-INFERENCE_ONLY=false
-VERBOSE=false
-OUTPUT_DIR="output"
-DATA_CONFIG="config/data_generator_config.yaml"
-MCMC_CONFIG="config/mcmc_config.yaml"
-ITERATIONS=""
+# Verify config files exist
 
-# Parse command-line options
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    --generate-data)
-      GENERATE_DATA=true
-      shift
-      ;;
-    --inference-only)
-      INFERENCE_ONLY=true
-      shift
-      ;;
-    --verbose)
-      VERBOSE=true
-      shift
-      ;;
-    --output-dir)
-      OUTPUT_DIR="$2"
-      shift 2
-      ;;
-    --data-config)
-      DATA_CONFIG="$2"
-      shift 2
-      ;;
-    --mcmc-config)
-      MCMC_CONFIG="$2"
-      shift 2
-      ;;
-    --iterations)
-      ITERATIONS="$2"
-      shift 2
-      ;;
-    --plot-only)
-      PLOT_ONLY=true
-      shift
-      ;;
-    --data-file)
-      DATA_FILE="$2"
-      shift 2
-      ;;
-    *)
-      echo "Unknown option: $1"
-      exit 1
-      ;;
-  esac
-done
-
-# Build the command
-CMD="python -m src.cli"
-
-if $GENERATE_DATA; then
-  CMD="$CMD --generate-data"
+if [ ! -f "config/mcmc_config.yaml" ]; then
+    echo "Error: mcmc_config.yaml not found in config directory"
+    exit 1
 fi
 
-if $INFERENCE_ONLY; then
-  CMD="$CMD --inference-only"
-fi
+# Set up logging
+LOG_FILE="output/logs/run_$(date +%Y%m%d_%H%M%S).log"
+mkdir -p "$(dirname "$LOG_FILE")"
 
-if $VERBOSE; then
-  CMD="$CMD --verbose"
-fi
+# Function to log messages
+log_message() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+}
 
-CMD="$CMD --output-dir $OUTPUT_DIR --data-config $DATA_CONFIG --mcmc-config $MCMC_CONFIG"
-
-if [ -n "$ITERATIONS" ]; then
-  CMD="$CMD --iterations $ITERATIONS"
-fi
-
-if $PLOT_ONLY; then
-  CMD="$CMD --plot-only"
-fi
-
-if [ -n "$DATA_FILE" ]; then
-  CMD="$CMD --data-file $DATA_FILE"
-fi
-
-# Run the command
-echo "Starting partial order inference..."
-echo "Command: $CMD"
-eval $CMD
+# Run main script with command line arguments
+log_message "Starting partial order inference..."
+python main.py \
+    --iterations 20000 \
+    --burn-in 1000 \
+    --dimension 3 \
+    --noise-model queue_jump \
+    --output-dir output \
+    "$@" 2>&1 | tee -a "$LOG_FILE"
 
 # Check if the run was successful
 if [ $? -eq 0 ]; then
-  echo "Analysis completed successfully!"
-  echo "Results can be found in the $OUTPUT_DIR directory"
-  exit 0
+    log_message "Analysis completed successfully!"
+    log_message "Results can be found in the output directory"
 else
-  echo "Error occurred during analysis"
-  echo "Check logs for details"
-  exit 1
+    log_message "Error occurred during analysis"
+    log_message "Check logs in $LOG_FILE for details"
+    exit 1
 fi 

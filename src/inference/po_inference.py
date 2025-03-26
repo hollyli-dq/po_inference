@@ -50,12 +50,12 @@ def run_inference(data: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any
 
         # Get MCMC parameters from config
         num_iterations = config["mcmc"]["num_iterations"]
-        K = config["mcmc"]["K"]
-        mcmc_pt = [
+        K=config["generation"]["K"]
+        mcmc_pt= [
             config["mcmc"]["update_probabilities"]["rho"],
             config["mcmc"]["update_probabilities"]["noise"],
             config["mcmc"]["update_probabilities"]["U"]
-        ]
+]
         dr = config["rho"]["dr"]
         noise_option = config["noise"]["noise_option"]
         sigma_mallow = config["noise"]["sigma_mallow"]
@@ -146,39 +146,39 @@ def run_inference(data: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any
 
 
 def save_results(results: Dict[str, Any], output_dir: str, data_name: str):
-    """Save inference results to files."""
+    """Save inference results to JSON file."""
     try:
         # Create output directory if it doesn't exist
         os.makedirs(output_dir, exist_ok=True)
-
-        # Save partial order
-        h_path = os.path.join(output_dir, f"{data_name}_partial_order.npy")
-        np.save(h_path, results['h'])
-        print(f"\nPartial order saved to {h_path}")
-
-        # Convert numpy arrays to lists for JSON serialization
+        
         def convert_to_serializable(obj):
+            """Convert numpy arrays and other non-serializable objects to serializable format."""
             if isinstance(obj, np.ndarray):
                 return obj.tolist()
+            elif isinstance(obj, dict):
+                return {k: convert_to_serializable(v) for k, v in obj.items()}
             elif isinstance(obj, list):
                 return [convert_to_serializable(item) for item in obj]
-            elif isinstance(obj, dict):
-                return {key: convert_to_serializable(value) for key, value in obj.items()}
-            return obj
-
-        # Save other results
+            elif isinstance(obj, tuple):
+                return tuple(convert_to_serializable(item) for item in obj)
+            else:
+                return obj
+        
+        # Convert all numpy arrays to lists for JSON serialization
+        results_dict = convert_to_serializable(results)
+        
+        # Save results to JSON file
         results_path = os.path.join(output_dir, f"{data_name}_results.json")
-        results_dict = {
-            'Z': convert_to_serializable(results['Z']),
-            'beta': convert_to_serializable(results['beta']),
-            'rho': float(results['rho']),
-            'prob_noise': float(results['prob_noise']) if results['prob_noise'] is not None else None,
-            'trace': convert_to_serializable(results['trace'])
-        }
         with open(results_path, 'w') as f:
             json.dump(results_dict, f, indent=2)
-        print(f"Results saved to {results_path}")
-
+        print(f"\nResults saved to {results_path}")
+        
+        # Save partial order matrix separately as numpy array
+        if 'h' in results:
+            h_path = os.path.join(output_dir, f"{data_name}_partial_order.npy")
+            np.save(h_path, results['h'])
+            print(f"Partial order matrix saved to {h_path}")
+            
     except Exception as e:
         print(f"Error in save_results: {str(e)}")
         raise

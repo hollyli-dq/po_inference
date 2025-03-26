@@ -107,7 +107,7 @@ def generate_data(config: Dict[str, Any]) -> Dict[str, Any]:
 def main():
     try:
         # Load configuration
-        config = load_config('config/dmcmc_config.yaml')
+        config = load_config('config/mcmc_config.yaml')
         
         # Get project root and create output directory
         project_root = get_project_root()

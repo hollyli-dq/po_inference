@@ -4,11 +4,12 @@
 data:
   path: "data/po_list_data.json"
   output_dir: "output"
-  generate_data: true  # Set to true to generate new data
+  generate_data: true  # Set to false to use existing data
+  data_name: "po_list_data"  # Name of the data file (without extension)
 
 # MCMC run configuration
 mcmc:
-  num_iterations: 2000    # Total number of MCMC iterations
+  num_iterations: 20000    # Total number of MCMC iterations
   num_iterations_debug: 2000
   K: 3                     # Latent dimension (number of columns in U)
   update_probabilities:

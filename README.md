@@ -1,84 +1,58 @@
 # Bayesian Partial Order Inference
 
-This project implements a Bayesian framework for inferring partial orders from observed rankings using Markov Chain Monte Carlo (MCMC) methods. The implementation includes data generation, inference, and visualization tools for analyzing partial order relationships.
+A Python package for Bayesian inference of strong partial orders from noisy observations using Markov Chain Monte Carlo (MCMC) methods. This implementation is based on the framework described in [Muir Watt et al. (2012)](https://doi.org/10.1214/12-AOS1029) 
+
+## Features
+
+- Bayesian inference of strong partial orders using MCMC
+- Support for different noise models:
+  - Queue jump noise model
+  - Mallows noise model
+- Visualization of:
+  - MCMC traces
+  - Inferred partial orders
+  - True vs. inferred order comparisons
+- Comprehensive logging and result storage
+- Configurable MCMC parameters and priors
 
 ## Mathematical Framework
 
 ### Partial Order Model
 
-A partial order is a binary relation $\preceq$ over a set of items that satisfies:
+A strong partial order is a binary relation \(\prec\) over a set of items that satisfies:
 
-- Reflexivity: $a \preceq a$
-- Antisymmetry: if $a \preceq b$ and $b \preceq a$, then $a = b$
-- Transitivity: if $a \preceq b$ and $b \preceq c$, then $a \preceq c$
+- Irreflexivity: \(\neg(a \prec a)\)
+- Antisymmetry: if \(a \prec b\) then \(\neg(b \prec a)\)
+- Transitivity: if \(a \prec b\) and \(b \prec c\) then \(a \prec c\)
 
 ### Latent Space Model
 
 The model uses a latent space representation where:
 
-- Each item $j$ has a K-dimensional latent position $U_j \in \mathbb{R}^K$
-- The correlation between dimensions is controlled by parameter $\rho$
-- The transformed latent positions $\eta_j$ are given by:
-  $$
-  \eta_j = U_j + \alpha_j
-  $$
+- Each item \(i\) has a K-dimensional latent position \(U_i \in \mathbb{R}^K\)
+- The correlation between dimensions is controlled by parameter \(\rho\)
+- The transformed latent positions \(\eta_i\) are given by:
+  \[ \eta_i = U_i + \alpha_i \]
+  where \(\alpha_i\) represents covariate effects.
 
-where $\alpha_i$ represents covariate effects.
+The mapping from \(\eta\) to the partial order \(h\) is defined as:
+\[ h_{ij} = \begin{cases}
+1 & \text{if } \eta_i \prec \eta_j \\
+0 & \text{otherwise}
+\end{cases} \]
 
 ### MCMC Inference
 
 The posterior distribution is sampled using MCMC with:
 
 - Prior distributions:
-  - $\rho \sim \text{Beta}(1, \rho_\text{prior})$
-  - $\tau \sim \text{Uniform}(0, 1)$
-  - $K \sim \text{Truncated-Poisson}(\lambda)$
-- The poesterior function is:
-  $$
-  π(ρ,U,β∣Y)∝π(ρ)π(β)π(U∣ρ)p(Y∣h(η(U,β)))
-  $$
-
-```
-.
-├── config/
-│   └── mcmc_config.yaml
-├── data/
-│   └── sample_data.yaml
-├── notebook/
-│   └── mcmc_simulation.ipynb
-├── src/
-│   ├── data/
-│   │   └── data_generator.py
-│   ├── mcmc/
-│   │   ├── mcmc_simulation.py
-│   │   └── likelihood_cache.py
-│   ├── utils/
-│   │   ├── basic_utils.py
-│   │   ├── statistical_utils.py
-│   │   └── generation_utils.py
-│   └── visualization/
-│       └── po_plot.py
-
-├── requirements.txt
-└── setup.py
-```
-
-## Features
-
-1. **Data Generation**
-
-   - Synthetic partial order generation
-   - Configurable number of items and dimensions
-   - Queue-jump noise models
-2. **MCMC Inference**
-
-   - Multiple parameter estimation
-   - Convergence diagnostics
-3. **Visualization**
-
-   - Partial order graphs
-   - MCMC trace plots
-   - Parameter posterior distributions
+  - \(\rho \sim \text{Beta}(1, \rho_{\text{prior}})\)
+  - \(\tau \sim \text{Uniform}(0, 1)\)
+  - \(K \sim \text{Truncated-Poisson}(\lambda)\)
+  - \(\beta \sim \text{Normal}(0, \sigma^2)\) for covariate effects
+- Likelihood function incorporating:
+  - Partial order constraints
+  - Noise models (queue-jump or Mallows)
 
 ## Installation
 
@@ -92,101 +66,101 @@ cd po_inference
 2. Install dependencies:
 
 ```bash
-pip install -e .
+pip install -r requirements.txt
+```
+
+## Project Structure
+
+```
+po_inference/
+├── config/
+│   └── mcmc_config.yaml        # Configuration for MCMC inference and data generation
+├── data/
+│   └── po_list_data.json      # Input data file
+├── output/
+│   ├── figures/
+│   │   ├── mcmc_traces/      # MCMC trace plots
+│   │   └── partial_orders/   # Partial order visualization plots
+│   ├── results/
+│   │   ├── mcmc_samples/    # MCMC samples
+│   │   └── summary_stats/   # Summary statistics
+│   └── logs/                # Log files
+├── scripts/
+│   └── run.sh               # Main execution script
+├── src/
+│   ├── inference/
+│   │   └── po_inference.py  # Main inference module
+│   ├── mcmc/
+│   │   └── mcmc_simulation.py  # MCMC implementation
+│   ├── utils/
+│   │   ├── basic_utils.py      # Basic utility functions
+│   │   ├── generation_utils.py # Data generation utilities
+│   │   └── statistical_utils.py # Statistical utilities
+│   └── visualization/
+│       └── po_plot.py          # Plotting utilities
+├── main.py                     # Main entry point
+└── requirements.txt            # Python dependencies
 ```
 
 ## Usage
 
-### Command Line Interface
+### Running the Analysis
 
-The package provides a command-line interface for running the analysis:
+The main script can be run using the provided shell script:
 
 ```bash
-# Run with default settings
-python -m po_inference
-
-# Generate data only
-python -m po_inference --generate-data
-
-# Run inference only (with existing data)
-python -m po_inference --inference-only
-
-# Specify config files
-python -m po_inference --data-config path/to/data_config.yaml --mcmc-config path/to/mcmc_config.yaml
-
-# Set output directory
-python -m po_inference --output-dir results/experiment1
-
-
+bash scripts/run.sh
 ```
 
-### Python API
+This will execute the analysis with default parameters:
 
-#### Data Generation
+- 20,000 MCMC iterations
+- 1,000 burn-in iterations
+- 3-dimensional partial order
+- Queue jump noise model
 
-```python
-from src.data.data_generator import generate_data
-from src.utils.basic_utils import load_config
+You can override these parameters by passing additional arguments:
 
-# Load configuration
-config = load_config('config/data_generator_config.yaml')
-
-# Generate synthetic data
-data = generate_data(config)
+```bash
+bash scripts/run.sh --iterations 50000 --burn-in 2000 --dimension 4
 ```
 
-#### MCMC Inference
+### Configuration
 
-```
-from src.inference.po_inference import run_inference
-from src.utils.basic_utils import load_config
-import json
+The analysis is configured through `config/mcmc_config.yaml`, which contains:
 
-# Load configuration
-config = load_config('config/mcmc_config.yaml')
+- MCMC parameters (iterations, burn-in, thinning)
+- Prior distributions
+- Visualization settings
+- Data generation parameters (if generating synthetic data)
 
-# Load data
-with open(config['data']['path'], 'r') as f:
-    data = json.load(f)
+### Output
 
-# Run MCMC inference
-results = run_inference(data, config)
+The analysis generates several outputs:
 
-```
+1. **Results Files**:
 
-#### Visualization
+   - `output/results/mcmc_samples/{data_name}_results.json`: MCMC samples and summary statistics
+   - `output/results/mcmc_samples/{data_name}_partial_order.npy`: Inferred partial order matrix
+2. **Visualizations**:
 
-```python
-from src.visualization.po_plot import POPlot
+   - `output/figures/mcmc_traces/{data_name}_mcmc_plots.pdf`: MCMC trace plots
+   - `output/figures/partial_orders/{data_name}_inferred_po.pdf`: Inferred partial order visualization
+   - `output/figures/partial_orders/{data_name}_true_po.pdf`: True partial order visualization (if available)
+3. **Logs**:
 
-# Initialize plotter
-plotter = POPlot()
+   - `output/logs/run_{timestamp}.log`: Detailed execution log
 
-# Plot partial order
-plotter.plot_partial_order(matrix=h_true, title="True Partial Order")
+## Dependencies
 
-# Plot MCMC results
-plotter.plot_mcmc_inferred_variables(mcmc_results, true_param, config)
-```
+- Python 3.8+
+- NumPy
+- Matplotlib
+- PyYAML
+- NetworkX (for graph operations)
 
-## Configuration
+## References
 
-The `data_generator_config.yaml` file controls various aspects of data generation:
-
-```yaml
-generation:
-  n: 10  # Number of items
-  N: 100  # Number of observations
-  K: 2   # Number of dimensions
-
-prior:
-  rho_prior: 1.0
-  noise_beta_prior: 1.0
-  K_prior: 1.0
-
-noise:
-  noise_option: "queue_jump"  # or "mallows_noise"
-```
 
 ## License
 
