@@ -15,9 +15,9 @@ A Python package for Bayesian inference of strong partial orders from noisy obse
 - Comprehensive logging and result storage
 - Configurable MCMC parameters and priors
 
-## Mathematical Framework
+## The Bayesian Partial Order 
 
-### Partial Order Model
+### Partial Order
 
 A strong partial order is a binary relation \(\prec\) over a set of items that satisfies:
 
@@ -41,30 +41,96 @@ The mapping from \(\eta\) to the partial order \(h\) is defined as:
 0 & \text{otherwise}
 \end{cases} \]
 
+#### Theorem (Partial Order Model)
+
+For \(\alpha\) and \(\Sigma_\rho\) defined above, if we take:
+
+- \(U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)\), independent for each \(j \in M\),
+- \(\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \,1_K^T\), and
+- \(y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)\),
+
 ### MCMC Inference
 
-The posterior distribution is sampled using MCMC with:
+The posterior distribution is given by:
 
-- Prior distributions:
-  - \(\rho \sim \text{Beta}(1, \rho_{\text{prior}})\)
-  - \(\tau \sim \text{Uniform}(0, 1)\)
-  - \(K \sim \text{Truncated-Poisson}(\lambda)\)
-  - \(\beta \sim \text{Normal}(0, \sigma^2)\) for covariate effects
-- Likelihood function incorporating:
-  - Partial order constraints
-  - Noise models (queue-jump or Mallows)
+$$
+\pi(\rho, U, \beta \mid Y) \propto \pi(\rho)\,\pi(\beta)\,\pi(U \mid \rho)\,p\Bigl(Y \mid h\bigl(\eta(U,\beta)\bigr)\Bigr).
+$$
+
+We sample from this posterior using MCMC. Specific update steps include:
+
+- Updating \(\rho\): Using a Beta prior (e.g., \(\text{Beta}(1, \rho_\text{prior})\)) with a mean around 0.9.
+- Updating \(p_{\mathrm{noise}}\): Using a Metropolis step with a Beta prior (e.g., \(\text{Beta}(1, 9)\)) with a mean around 0.1.
+- Updating the latent positions \(U\): Via a random-walk proposal given a row vector updated for each iteration.
+
+Prior distributions:
+- \(\rho \sim \text{Beta}(1, \rho_{\text{prior}})\)
+- \(\tau \sim \text{Uniform}(0, 1)\)
+- \(K \sim \text{Truncated-Poisson}(\lambda)\)
+- \(\beta \sim \text{Normal}(0, \sigma^2)\) for covariate effects
+
+The likelihood function incorporates:
+- Partial order constraints
+- Noise models (queue-jump or Mallows)
+
+## Project structure
+```
+.
+├── config/
+│   └── mcmc_config.yaml
+│   └── data_generator_config.yaml
+├── data/
+├── notebook/
+│   └── mcmc_simulation.ipynb
+├── src/
+│   ├── data/
+│   │   └── data_generator.py
+│   ├── mcmc/
+│   │   ├── mcmc_simulation.py
+│   │   └── likelihood_cache.py
+│   ├── utils/
+│   │   ├── basic_utils.py
+│   │   ├── statistical_utils.py
+│   │   └── generation_utils.py
+│   └── visualization/
+│       └── po_plot.py
+├── requirements.txt
+├── README.md.txt
+└── setup.py
+```
+
+## Features
+
+1. **Data Generation**
+
+   - Synthetic partial order generation
+   - Configurable number of items and dimensions
+   - Queue-jump noise models
+2. **MCMC Inference**
+
+   - Multiple parameter estimation
+   - Convergence diagnostics
+3. **Visualization**
+
+   - Partial order graphs
+   - MCMC trace plots
+   - Parameter posterior distributions
 
 ## Installation
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/po_inference.git
+git clone https://github.com/hollyli-dq/po_inference.git
 cd po_inference
+```
+2. Create and Activate a Virtual Environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate
 ```
 
 2. Install dependencies:
-
 ```bash
 pip install -r requirements.txt
 ```
@@ -104,7 +170,21 @@ po_inference/
 
 ## Usage
 
-### Running the Analysis
+### Test example
+
+run main.py in the model with the given test case, or go notebook to view the example.
+
+```bash
+# Run with default settings
+sh scripts/run.sh 
+```
+or 
+```bash
+# Run with default settings
+python scripts/main.py 
+```
+
+### Command Line Interface
 
 The main script can be run using the provided shell script:
 
@@ -161,6 +241,30 @@ The analysis generates several outputs:
 
 ## References
 
+The `mcmc_config.yaml` file controls various aspects of data generation:
+
+```yaml
+data:
+  path: "data/sample_data.json"
+  output_dir: "output"
+  generate_data: true
+
+mcmc:
+  num_iterations: 2000
+  K: 3
+  update_probabilities:
+    rho: 0.2
+    noise: 0.3
+    U: 0.3
+    K: 0.2
+
+prior:
+  rho_prior: 0.16667
+  noise_beta_prior: 9
+  mallow_ua: 10
+  K_prior: 3
+
+```
 
 ## License
 
