@@ -48,7 +48,7 @@ $h_{ij} = \begin{cases}
 For $\alpha$ and $\Sigma_\rho$ defined above, if we take:
 
 - $U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)$, independent for each $j \in M$,
-- $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \,1_K^T$, and \alpha_j=\beta_j*x_j 
+- $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \,1_K^T$, and $\alpha_j=\beta_j*x_j$ 
 - $y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)$,
 
 
