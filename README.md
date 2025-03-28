@@ -30,11 +30,11 @@ A strong partial order is a binary relation $\prec$ over a set of items that sat
 ### Latent Space Model
 The model uses a latent space representation where:
 
-- Each item $i$ has a K-dimensional latent position $U_i \in \mathbb{R}^K$
+- Each item $j$ has a K-dimensional latent position $U_j \in \mathbb{R}^K$, where $k$ is the dimension of the latent matrix $U$
 - The correlation between dimensions is controlled by parameter $\rho$
 - The transformed latent positions $\eta_i$ are given by:
   $$ \eta_i = U_i + \alpha_i $$
-  where $\alpha_i$ represents covariate effects.
+  where $\alpha_i$ represents covariate effects, and this is given by the $\beta_j*x_j$.
 
 The mapping from $\eta$ to the partial order $h$ is defined as:
 $$ h_{ij} = \begin{cases}
@@ -47,7 +47,7 @@ $$ h_{ij} = \begin{cases}
 For $\alpha$ and $\Sigma_\rho$ defined above, if we take:
 
 - $U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)$, independent for each $j \in M$,
-- $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \,1_K^T$, and
+- $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \,1_K^T$, and \alpha_j=\beta_j*x_j 
 - $y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)$,
 
 
