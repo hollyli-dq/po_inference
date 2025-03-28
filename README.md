@@ -4,6 +4,7 @@ A Python package for Bayesian inference of strong partial orders from noisy obse
 
 ## Features
 
+- Sampling partial orders and also the total orders given hyperparameters
 - Bayesian inference of strong partial orders using MCMC
 - Support for different noise models:
   - Queue jump noise model
