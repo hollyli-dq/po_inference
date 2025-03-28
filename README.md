@@ -19,11 +19,12 @@ A Python package for Bayesian inference of strong partial orders from noisy obse
 
 ### Partial Order
 
-A strong partial order is a binary relation \(\prec\) over a set of items that satisfies:
+A strong partial order is a binary relation $\prec$ over a set of items that satisfies:
 
-- Irreflexivity: \(\neg(a \prec a)\)
-- Antisymmetry: if \(a \prec b\) then \(\neg(b \prec a)\)
-- Transitivity: if \(a \prec b\) and \(b \prec c\) then \(a \prec c\)
+- Irreflexivity: $\neg(a \prec a)$
+- Antisymmetry: if $a \prec b$ then $\neg(b \prec a)$
+- Transitivity: if $a \prec b$ and $b \prec c$ then $a \prec c$
+
 
 ### Latent Space Model
 
