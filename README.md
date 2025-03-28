@@ -71,7 +71,7 @@ Prior distributions:
 - $\rho \sim \text{Beta}(1, \rho_{\text{prior}})$
 - $\tau \sim \text{Uniform}(0, 1)$
 - $K \sim \text{Truncated-Poisson}(\lambda)$
-- $\beta \sim \text{Normal}(0, \sigma^2)$ for covariate effects
+- $\beta is the predetermined covariate effects 
 
 The likelihood function incorporates:
 - Partial order constraints
