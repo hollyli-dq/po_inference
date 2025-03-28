@@ -27,28 +27,28 @@ A strong partial order is a binary relation $\prec$ over a set of items that sat
 
 
 ### Latent Space Model
-
 The model uses a latent space representation where:
 
-- Each item \(i\) has a K-dimensional latent position \(U_i \in \mathbb{R}^K\)
-- The correlation between dimensions is controlled by parameter \(\rho\)
-- The transformed latent positions \(\eta_i\) are given by:
-  \[ \eta_i = U_i + \alpha_i \]
-  where \(\alpha_i\) represents covariate effects.
+- Each item $i$ has a K-dimensional latent position $U_i \in \mathbb{R}^K$
+- The correlation between dimensions is controlled by parameter $\rho$
+- The transformed latent positions $\eta_i$ are given by:
+  $$ \eta_i = U_i + \alpha_i $$
+  where $\alpha_i$ represents covariate effects.
 
-The mapping from \(\eta\) to the partial order \(h\) is defined as:
-\[ h_{ij} = \begin{cases}
+The mapping from $\eta$ to the partial order $h$ is defined as:
+$$ h_{ij} = \begin{cases}
 1 & \text{if } \eta_i \prec \eta_j \\
 0 & \text{otherwise}
-\end{cases} \]
+\end{cases} $$
 
 #### Theorem (Partial Order Model)
 
-For \(\alpha\) and \(\Sigma_\rho\) defined above, if we take:
+For $\alpha$ and $\Sigma_\rho$ defined above, if we take:
 
-- \(U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)\), independent for each \(j \in M\),
-- \(\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \,1_K^T\), and
-- \(y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)\),
+- $U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)$, independent for each $j \in M$,
+- $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \,1_K^T$, and
+- $y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)$,
+
 
 ### MCMC Inference
 
@@ -58,28 +58,28 @@ $$
 \pi(\rho, U, \beta \mid Y) \propto \pi(\rho)\,\pi(\beta)\,\pi(U \mid \rho)\,p\Bigl(Y \mid h\bigl(\eta(U,\beta)\bigr)\Bigr).
 $$
 
+
 We sample from this posterior using MCMC. Specific update steps include:
 
-- Updating \(\rho\): Using a Beta prior (e.g., \(\text{Beta}(1, \rho_\text{prior})\)) with a mean around 0.9.
-- Updating \(p_{\mathrm{noise}}\): Using a Metropolis step with a Beta prior (e.g., \(\text{Beta}(1, 9)\)) with a mean around 0.1.
-- Updating the latent positions \(U\): Via a random-walk proposal given a row vector updated for each iteration.
+- Updating $\rho$: Using a Beta prior (e.g., $\text{Beta}(1, \rho_\text{prior})$) with a mean around 0.9.
+- Updating $p_{\mathrm{noise}}$: Using a Metropolis step with a Beta prior (e.g., $\text{Beta}(1, 9)$) with a mean around 0.1.
+- Updating the latent positions $U$: Via a random-walk proposal given a row vector updated for each iteration.
 
 Prior distributions:
-- \(\rho \sim \text{Beta}(1, \rho_{\text{prior}})\)
-- \(\tau \sim \text{Uniform}(0, 1)\)
-- \(K \sim \text{Truncated-Poisson}(\lambda)\)
-- \(\beta \sim \text{Normal}(0, \sigma^2)\) for covariate effects
+- $\rho \sim \text{Beta}(1, \rho_{\text{prior}})$
+- $\tau \sim \text{Uniform}(0, 1)$
+- $K \sim \text{Truncated-Poisson}(\lambda)$
+- $\beta \sim \text{Normal}(0, \sigma^2)$ for covariate effects
 
 The likelihood function incorporates:
 - Partial order constraints
-- Noise models (queue-jump or Mallows)
+- Noise models (queue-jump or Mallows(not provided yet))
 
 ## Project structure
 ```
 .
 ├── config/
 │   └── mcmc_config.yaml
-│   └── data_generator_config.yaml
 ├── data/
 ├── notebook/
 │   └── mcmc_simulation.ipynb
@@ -100,22 +100,6 @@ The likelihood function incorporates:
 └── setup.py
 ```
 
-## Features
-
-1. **Data Generation**
-
-   - Synthetic partial order generation
-   - Configurable number of items and dimensions
-   - Queue-jump noise models
-2. **MCMC Inference**
-
-   - Multiple parameter estimation
-   - Convergence diagnostics
-3. **Visualization**
-
-   - Partial order graphs
-   - MCMC trace plots
-   - Parameter posterior distributions
 
 ## Installation
 
@@ -134,39 +118,6 @@ source .venv/bin/activate
 2. Install dependencies:
 ```bash
 pip install -r requirements.txt
-```
-
-## Project Structure
-
-```
-po_inference/
-├── config/
-│   └── mcmc_config.yaml        # Configuration for MCMC inference and data generation
-├── data/
-│   └── po_list_data.json      # Input data file
-├── output/
-│   ├── figures/
-│   │   ├── mcmc_traces/      # MCMC trace plots
-│   │   └── partial_orders/   # Partial order visualization plots
-│   ├── results/
-│   │   ├── mcmc_samples/    # MCMC samples
-│   │   └── summary_stats/   # Summary statistics
-│   └── logs/                # Log files
-├── scripts/
-│   └── run.sh               # Main execution script
-├── src/
-│   ├── inference/
-│   │   └── po_inference.py  # Main inference module
-│   ├── mcmc/
-│   │   └── mcmc_simulation.py  # MCMC implementation
-│   ├── utils/
-│   │   ├── basic_utils.py      # Basic utility functions
-│   │   ├── generation_utils.py # Data generation utilities
-│   │   └── statistical_utils.py # Statistical utilities
-│   └── visualization/
-│       └── po_plot.py          # Plotting utilities
-├── main.py                     # Main entry point
-└── requirements.txt            # Python dependencies
 ```
 
 ## Usage
@@ -205,15 +156,6 @@ You can override these parameters by passing additional arguments:
 ```bash
 bash scripts/run.sh --iterations 50000 --burn-in 2000 --dimension 4
 ```
-
-### Configuration
-
-The analysis is configured through `config/mcmc_config.yaml`, which contains:
-
-- MCMC parameters (iterations, burn-in, thinning)
-- Prior distributions
-- Visualization settings
-- Data generation parameters (if generating synthetic data)
 
 ### Output
 
