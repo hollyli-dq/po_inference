@@ -32,7 +32,7 @@ The model uses a latent space representation where:
 
 - Each item $j$ has a $K$-dimensional latent position $U_j \in \mathbb{R}^K$.
 - The correlation between dimensions is controlled by the parameter $\rho$.
-- The transformed latent positions $\eta_i$ are given by $\,\eta_i = U_i + \alpha_i\,$, where $\alpha_i$ represents covariate effects, e.g. $\beta_j \times x_j$.
+- The transformed latent positions $\eta_i$ are given by $\eta_i = U_i + \alpha_i$, where $\alpha_i$ represents covariate effects, e.g. $\beta_j \times x_j$.
 
 The mapping from $\eta$ to the partial order $h$ is defined as:
 $h_{ij} = \begin{cases}
