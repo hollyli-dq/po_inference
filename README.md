@@ -5,7 +5,7 @@ A Python package for Bayesian inference of strong partial orders from noisy obse
 ## Features
 
 - **Bayesian inference** of the partial orders using MCMC
-- Sampling partial orders and its total orders
+- **Sampling partial orders** and its total orders
 - **Support for different noise models**:
 
   - Queue jump noise model
@@ -34,7 +34,7 @@ For $\alpha$ and $\Sigma_\rho$ defined above, if we take:
 
 - $U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)$, independently for each $j \in M$,
 - $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \, 1_K^T$,
-- $y \sim p(\cdot \mid h(\eta(U, \beta))),$,
+- $y \sim p(⋅∣h(\eta(U,\beta)))$
 
 The model uses a latent space representation where:
 
