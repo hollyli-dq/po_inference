@@ -9,7 +9,7 @@ data:
 
 # MCMC run configuration
 mcmc:
-  num_iterations: 20000    # Total number of MCMC iterations
+  num_iterations: 400000    # Total number of MCMC iterations
   num_iterations_debug: 2000
   K: 3                     # Latent dimension (number of columns in U)
   update_probabilities:
