@@ -1,5 +1,6 @@
 # Bayesian Partial Order Inference
 
+<<<<<<< HEAD
 A Python package for Bayesian inference of strong partial orders from noisy observations using Markov Chain Monte Carlo (MCMC) methods. This implementation is based on the framework described in Nicholls, G. K. and Muir Watt, A. (2011).
 ## Features
 
@@ -7,6 +8,15 @@ A Python package for Bayesian inference of strong partial orders from noisy obse
 - Sampling partial orders and its total orders
 - **Support for different noise models**:
 
+=======
+A Python package for Bayesian inference of strong partial orders from noisy observations using Markov Chain Monte Carlo (MCMC) methods. This implementation is based on the framework described in [Muir Watt et al. (2012)](https://doi.org/10.1214/12-AOS1029).
+
+## Features
+
+- Sampling partial orders and also the total orders given hyperparameters
+- Bayesian inference of strong partial orders using MCMC
+- Support for different noise models:
+>>>>>>> 7eeb0fade316d31d183a77c118651319f4483438
   - Queue jump noise model
   - Mallows noise model
 
@@ -22,11 +32,19 @@ A Python package for Bayesian inference of strong partial orders from noisy obse
 
 ### Partial Order Definition
 
+<<<<<<< HEAD
 A partial order is a binary relation $\,\prec\,$ over a set of items that satisfies:
 
 - **Irreflexivity**: $\,\neg(a \prec a)\,$
 - **Antisymmetry**: If $\,a \prec b\,$ then $\,\neg(b \prec a)\,$
 - **Transitivity**: If $\,a \prec b\,$ and $\,b \prec c\,$ then $\,a \prec c\,$
+=======
+A strong partial order is a binary relation $\,\prec\,$ over a set of items that satisfies:
+
+- Irreflexivity: $\,\neg(a \prec a)\,$
+- Antisymmetry: if $\,a \prec b\,$ then $\,\neg(b \prec a)\,$
+- Transitivity: if $\,a \prec b\,$ and $\,b \prec c\,$ then $\,a \prec c\,$
+>>>>>>> 7eeb0fade316d31d183a77c118651319f4483438
 
 ### Theorem (Partial Order Model)
 
@@ -39,6 +57,7 @@ For $\alpha$ and $\Sigma_\rho$ defined above, if we take:
 The model uses a latent space representation where:
 
 - Each item $j$ has a $K$-dimensional latent position $U_j \in \mathbb{R}^K$.
+<<<<<<< HEAD
 - The correlation between dimensions is controlled by parameter $\rho$.
 - $\alpha_j$ represents covariate  represents covariate effects for each  item $i$
 
@@ -51,10 +70,31 @@ h_{ij} =
 0 & \text{otherwise}.
 \end{cases}
 $$
+=======
+- The correlation between dimensions is controlled by the parameter $\rho$.
+- The transformed latent positions $\eta_i$ are given by $\eta_i = U_i + \alpha_i$, where $\alpha_i$ represents covariate effects, e.g. $\beta_j \times x_j$.
+
+The mapping from $\eta$ to the partial order $h$ is defined as:
+$h_{ij} = \begin{cases}
+1 & \text{if } \eta_i \prec \eta_j \\
+0 & \text{otherwise}
+\end{cases}$
+
+#### Theorem (Partial Order Model)
+
+For $\alpha$ and $\Sigma_\rho$ defined above, if we take:
+
+- $U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)$ independently for each $j \in M$,
+- $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j\,1_K^T$, where $\alpha_j = \beta_j \times x_j$,
+- $y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)$,
+
+then certain partial‐order properties follow (see the reference for detailed proofs).
+>>>>>>> 7eeb0fade316d31d183a77c118651319f4483438
 
 ### MCMC Inference
 
 The posterior distribution is given by:
+<<<<<<< HEAD
 
 $$
 \pi(\rho, U, \beta \mid Y) \;\propto\; \pi(\rho)\,\pi(\beta)\,\pi(U \mid \rho)\,p\bigl(Y \mid h(\eta(U,\beta))\bigr).
@@ -74,10 +114,26 @@ We sample from this posterior using MCMC. Specific update steps include:
 - $\beta is given in this example
 
 **The likelihood function** incorporates:
+=======
+$\pi(\rho, U, \beta \mid Y) \;\propto\; \pi(\rho)\,\pi(\beta)\,\pi(U \mid \rho)\,p\bigl(Y \mid h(\eta(U,\beta))\bigr).$
+
+We sample from this posterior using MCMC. Specific update steps include:
+
+- **Updating $\rho$:** Using a Beta prior (e.g. $\text{Beta}(1, \rho_\text{prior})$) with mean around 0.9.
+- **Updating $p_{\mathrm{noise}}$:** Using a Metropolis step with a Beta prior (e.g. $\text{Beta}(1, 9)$) with mean around 0.1.
+- **Updating the latent positions $U$:** Via a random-walk proposal on each row of $U$.
+
+Priors:
+- $\rho \sim \text{Beta}(1, \rho_{\text{prior}})$
+- $\tau \sim \text{Uniform}(0, 1)$
+- $K \sim \text{Truncated-Poisson}(\lambda)$
+- $\beta$ is the predetermined covariate effects
+>>>>>>> 7eeb0fade316d31d183a77c118651319f4483438
 
 - Partial order constraints
 - Noise models (queue-jump or Mallows)
 
+<<<<<<< HEAD
 ## Project structure
 
 ```
@@ -206,3 +262,7 @@ The analysis generates several outputs:
 * Chuxuan, Jiang, C., Nicholls, G. K., & Lee, J. E. (2023). [Bayesian Inference for Vertex-Series-Parallel Partial Orders](http://arxiv.org/abs/2306.15827).
 
 - Nicholls, G. K. and Muir Watt, A. (2011). **Partial Order Models for Episcopal Social Status in 12th Century England.** *Proceedings of the 26th International Workshop on Statistical Modelling (Valencia, Spain), July 5–11, 2011*, pp. 437–440.
+=======
+## Project Structure
+
+>>>>>>> 7eeb0fade316d31d183a77c118651319f4483438
