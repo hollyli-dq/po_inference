@@ -34,7 +34,7 @@ For $\alpha$ and $\Sigma_\rho$ defined above, if we take:
 
 - $U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)$, independently for each $j \in M$,
 - $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \, 1_K^T$,
-- $y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)\,$,
+- $y \sim p(\cdot \mid h(\eta(U, \beta))),$,
 
 The model uses a latent space representation where:
 
