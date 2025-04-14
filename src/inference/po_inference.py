@@ -14,7 +14,6 @@ from src.mcmc.mcmc_simulation import mcmc_partial_order
 def get_project_root() -> str:
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 def load_config(config_path: str) -> Dict[str, Any]:
     """Load configuration from YAML file."""
     try:

@@ -1,25 +1,17 @@
 # Bayesian Partial Order Inference
 
-<<<<<<< HEAD
+# Bayesian Partial Order Inference
+
 A Python package for Bayesian inference of strong partial orders from noisy observations using Markov Chain Monte Carlo (MCMC) methods. This implementation is based on the framework described in Nicholls, G. K. and Muir Watt, A. (2011).
+
 ## Features
 
 - **Bayesian inference** of the partial orders using MCMC
-- Sampling partial orders and its total orders
+- **Sampling partial orders** and its total orders
 - **Support for different noise models**:
 
-=======
-A Python package for Bayesian inference of strong partial orders from noisy observations using Markov Chain Monte Carlo (MCMC) methods. This implementation is based on the framework described in [Muir Watt et al. (2012)](https://doi.org/10.1214/12-AOS1029).
-
-## Features
-
-- Sampling partial orders and also the total orders given hyperparameters
-- Bayesian inference of strong partial orders using MCMC
-- Support for different noise models:
->>>>>>> 7eeb0fade316d31d183a77c118651319f4483438
   - Queue jump noise model
   - Mallows noise model
-
 - **Visualization** of:
 
   - Partial orders
@@ -32,19 +24,11 @@ A Python package for Bayesian inference of strong partial orders from noisy obse
 
 ### Partial Order Definition
 
-<<<<<<< HEAD
-A partial order is a binary relation $\,\prec\,$ over a set of items that satisfies:
+A strong partial order is a binary relation $\,\prec\,$ over a set of items that satisfies:
 
 - **Irreflexivity**: $\,\neg(a \prec a)\,$
 - **Antisymmetry**: If $\,a \prec b\,$ then $\,\neg(b \prec a)\,$
 - **Transitivity**: If $\,a \prec b\,$ and $\,b \prec c\,$ then $\,a \prec c\,$
-=======
-A strong partial order is a binary relation $\,\prec\,$ over a set of items that satisfies:
-
-- Irreflexivity: $\,\neg(a \prec a)\,$
-- Antisymmetry: if $\,a \prec b\,$ then $\,\neg(b \prec a)\,$
-- Transitivity: if $\,a \prec b\,$ and $\,b \prec c\,$ then $\,a \prec c\,$
->>>>>>> 7eeb0fade316d31d183a77c118651319f4483438
 
 ### Theorem (Partial Order Model)
 
@@ -52,14 +36,13 @@ For $\alpha$ and $\Sigma_\rho$ defined above, if we take:
 
 - $U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)$, independently for each $j \in M$,
 - $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \, 1_K^T$,
-- $y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)\,$,
+- $y \sim p(⋅∣h(\eta(U,\beta)))$
 
 The model uses a latent space representation where:
 
 - Each item $j$ has a $K$-dimensional latent position $U_j \in \mathbb{R}^K$.
-<<<<<<< HEAD
 - The correlation between dimensions is controlled by parameter $\rho$.
-- $\alpha_j$ represents covariate  represents covariate effects for each  item $i$
+- The transformed latent positions $\eta_i$ are given by $\eta_i = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_i$, where $\alpha_i$ represents covariate effects, e.g. $\beta_j \times x_j$.
 
 The mapping from $\eta$ to the partial order $h$ is defined as:
 
@@ -70,31 +53,10 @@ h_{ij} =
 0 & \text{otherwise}.
 \end{cases}
 $$
-=======
-- The correlation between dimensions is controlled by the parameter $\rho$.
-- The transformed latent positions $\eta_i$ are given by $\eta_i = U_i + \alpha_i$, where $\alpha_i$ represents covariate effects, e.g. $\beta_j \times x_j$.
-
-The mapping from $\eta$ to the partial order $h$ is defined as:
-$h_{ij} = \begin{cases}
-1 & \text{if } \eta_i \prec \eta_j \\
-0 & \text{otherwise}
-\end{cases}$
-
-#### Theorem (Partial Order Model)
-
-For $\alpha$ and $\Sigma_\rho$ defined above, if we take:
-
-- $U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)$ independently for each $j \in M$,
-- $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j\,1_K^T$, where $\alpha_j = \beta_j \times x_j$,
-- $y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)$,
-
-then certain partial‐order properties follow (see the reference for detailed proofs).
->>>>>>> 7eeb0fade316d31d183a77c118651319f4483438
 
 ### MCMC Inference
 
 The posterior distribution is given by:
-<<<<<<< HEAD
 
 $$
 \pi(\rho, U, \beta \mid Y) \;\propto\; \pi(\rho)\,\pi(\beta)\,\pi(U \mid \rho)\,p\bigl(Y \mid h(\eta(U,\beta))\bigr).
@@ -111,29 +73,13 @@ We sample from this posterior using MCMC. Specific update steps include:
 - $\rho \sim \text{Beta}(1, \rho_{\text{prior}})$
 - $\tau \sim \text{Uniform}(0, 1)$
 - $K \sim \text{Truncated-Poisson}(\lambda)$
-- $\beta is given in this example
+- $\beta \sim \text{Normal}(0, \sigma^2)$ for covariate effects
 
 **The likelihood function** incorporates:
-=======
-$\pi(\rho, U, \beta \mid Y) \;\propto\; \pi(\rho)\,\pi(\beta)\,\pi(U \mid \rho)\,p\bigl(Y \mid h(\eta(U,\beta))\bigr).$
 
-We sample from this posterior using MCMC. Specific update steps include:
+  - Partial order constraints
+  - Noise models (queue-jump or Mallows)
 
-- **Updating $\rho$:** Using a Beta prior (e.g. $\text{Beta}(1, \rho_\text{prior})$) with mean around 0.9.
-- **Updating $p_{\mathrm{noise}}$:** Using a Metropolis step with a Beta prior (e.g. $\text{Beta}(1, 9)$) with mean around 0.1.
-- **Updating the latent positions $U$:** Via a random-walk proposal on each row of $U$.
-
-Priors:
-- $\rho \sim \text{Beta}(1, \rho_{\text{prior}})$
-- $\tau \sim \text{Uniform}(0, 1)$
-- $K \sim \text{Truncated-Poisson}(\lambda)$
-- $\beta$ is the predetermined covariate effects
->>>>>>> 7eeb0fade316d31d183a77c118651319f4483438
-
-- Partial order constraints
-- Noise models (queue-jump or Mallows)
-
-<<<<<<< HEAD
 ## Project structure
 
 ```
@@ -157,7 +103,7 @@ Priors:
 │   └── visualization/
 │       └── po_plot.py
 ├── requirements.txt
-├── README.md.txt
+├── README.md
 └── setup.py
 ```
 
@@ -177,7 +123,7 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-2. Install dependencies:
+3. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -187,7 +133,7 @@ pip install -r requirements.txt
 
 ### Test example
 
-run main.py in the model with the given test case, or go notebook to view the example.
+Run main.py in the model with the given test case, or go to notebook to view the example.
 
 ```bash
 # Run with default settings
@@ -260,9 +206,210 @@ The analysis generates several outputs:
 
 * Nicholls, G. K., Lee, J. E., Karn, N., Johnson, D., Huang, R., & Muir-Watt, A. (2024). [Bayesian Inference for Partial Orders from Random Linear Extensions: Power Relations from 12th Century Royal Acta](https://doi.org/10.48550/arXiv.2212.05524)*
 * Chuxuan, Jiang, C., Nicholls, G. K., & Lee, J. E. (2023). [Bayesian Inference for Vertex-Series-Parallel Partial Orders](http://arxiv.org/abs/2306.15827).
+* Nicholls, G. K. and Muir Watt, A. (2011). **Partial Order Models for Episcopal Social Status in 12th Century England.** *Proceedings of the 26th International Workshop on Statistical Modelling (Valencia, Spain), July 5–11, 2011*, pp. 437–440.
 
-- Nicholls, G. K. and Muir Watt, A. (2011). **Partial Order Models for Episcopal Social Status in 12th Century England.** *Proceedings of the 26th International Workshop on Statistical Modelling (Valencia, Spain), July 5–11, 2011*, pp. 437–440.
-=======
-## Project Structure
+A Python package for Bayesian inference of strong partial orders from noisy observations using Markov Chain Monte Carlo (MCMC) methods. This implementation is based on the framework described in Nicholls, G. K. and Muir Watt, A. (2011).
 
->>>>>>> 7eeb0fade316d31d183a77c118651319f4483438
+## Features
+
+- **Bayesian inference** of the partial orders using MCMC
+- Sampling partial orders and its total orders
+- **Support for different noise models**:
+
+  - Queue jump noise model
+  - Mallows noise model
+- **Visualization** of:
+
+  - Partial orders
+  - MCMC traces
+  - True vs. inferred partial orders and model hyperparameters
+  - Posterior parameter distribution
+- **Comprehensive logging** and result storage
+
+## The Bayesian Partial Order
+
+### Partial Order Definition
+
+A strong partial order is a binary relation $\,\prec\,$ over a set of items that satisfies:
+
+- **Irreflexivity**: $\,\neg(a \prec a)\,$
+- **Antisymmetry**: If $\,a \prec b\,$ then $\,\neg(b \prec a)\,$
+- **Transitivity**: If $\,a \prec b\,$ and $\,b \prec c\,$ then $\,a \prec c\,$
+
+### Theorem (Partial Order Model)
+
+For $\alpha$ and $\Sigma_\rho$ defined above, if we take:
+
+- $U_{j,:} \sim \mathcal{N}(0, \Sigma_\rho)$, independently for each $j \in M$,
+- $\eta_{j,:} = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_j \, 1_K^T$,
+- $y \sim p\bigl(\cdot \mid h(\eta(U, \beta))\bigr)\,$,
+
+The model uses a latent space representation where:
+
+- Each item $j$ has a $K$-dimensional latent position $U_j \in \mathbb{R}^K$.
+- The correlation between dimensions is controlled by parameter $\rho$.
+- The transformed latent positions $\eta_i$ are given by $\eta_i = U_i + \alpha_i$, where $\alpha_i$ represents covariate effects, e.g. $\beta_j \times x_j$.
+
+The mapping from $\eta$ to the partial order $h$ is defined as:
+
+$$
+h_{ij} =
+\begin{cases}
+1 & \text{if } \eta_i \prec \eta_j,\\
+0 & \text{otherwise}.
+\end{cases}
+$$
+
+### MCMC Inference
+
+The posterior distribution is given by:
+
+$$
+\pi(\rho, U, \beta \mid Y) \;\propto\; \pi(\rho)\,\pi(\beta)\,\pi(U \mid \rho)\,p\bigl(Y \mid h(\eta(U,\beta))\bigr).
+$$
+
+We sample from this posterior using MCMC. Specific update steps include:
+
+- **Updating $\rho$**: Using a Beta prior (e.g., $\text{Beta}(1, \rho_\text{prior})$) with a mean around 0.9.
+- **Updating $p_{\mathrm{noise}}$**: Using a Metropolis step with a Beta prior (e.g., $\text{Beta}(1, 9)$) with a mean around 0.1.
+- **Updating the latent positions $U$**: Via a random-walk proposal, updating each row vector randomly.
+
+**Prior distributions**:
+
+- $\rho \sim \text{Beta}(1, \rho_{\text{prior}})$
+- $\tau \sim \text{Uniform}(0, 1)$
+- $K \sim \text{Truncated-Poisson}(\lambda)$
+- $\beta \sim \text{Normal}(0, \sigma^2)$ for covariate effects
+
+**The likelihood function** incorporates:
+
+- Partial order constraints
+- Noise models (queue-jump or Mallows)
+
+## Project structure
+
+```
+.
+├── config/
+│   └── mcmc_config.yaml
+│   └── data_generator_config.yaml
+├── data/
+├── notebook/
+│   └── mcmc_simulation.ipynb
+├── src/
+│   ├── data/
+│   │   └── data_generator.py
+│   ├── mcmc/
+│   │   ├── mcmc_simulation.py
+│   │   └── likelihood_cache.py
+│   ├── utils/
+│   │   ├── basic_utils.py
+│   │   ├── statistical_utils.py
+│   │   └── generation_utils.py
+│   └── visualization/
+│       └── po_plot.py
+├── requirements.txt
+├── README.md
+└── setup.py
+```
+
+## Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/hollyli-dq/po_inference.git
+cd po_inference
+```
+
+2. Create and Activate a Virtual Environment:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+3. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+### Test example
+
+Run main.py in the model with the given test case, or go to notebook to view the example.
+
+```bash
+# Run with default settings
+sh scripts/run.sh 
+```
+
+or
+
+```bash
+# Run with default settings
+python scripts/main.py 
+```
+
+### Command Line Interface
+
+The main script can be run using the provided shell script:
+
+```bash
+bash scripts/run.sh
+```
+
+This will execute the analysis with default parameters:
+
+- 20,000 MCMC iterations
+- 1,000 burn-in iterations
+- 3-dimensional partial order
+- Queue jump noise model
+
+You can override these parameters by passing additional arguments:
+
+```bash
+bash scripts/run.sh --iterations 50000 --burn-in 2000 --dimension 4
+```
+
+### Configuration
+
+The analysis is configured through `config/mcmc_config.yaml`, which contains:
+
+- MCMC parameters (iterations, burn-in, thinning)
+- Prior distributions
+- Visualization settings
+- Data generation parameters (if generating synthetic data)
+
+### Output
+
+The analysis generates several outputs:
+
+1. **Results Files**:
+
+   - `output/results/mcmc_samples/{data_name}_results.json`: MCMC samples and summary statistics
+   - `output/results/mcmc_samples/{data_name}_partial_order.npy`: Inferred partial order matrix
+2. **Visualizations**:
+
+   - `output/figures/mcmc_traces/{data_name}_mcmc_plots.pdf`: MCMC trace plots
+   - `output/figures/partial_orders/{data_name}_inferred_po.pdf`: Inferred partial order visualization
+   - `output/figures/partial_orders/{data_name}_true_po.pdf`: True partial order visualization (if available)
+3. **Logs**:
+
+   - `output/logs/run_{timestamp}.log`: Detailed execution log
+
+## Dependencies
+
+- Python 3.8+
+- NumPy
+- Matplotlib
+- PyYAML
+- NetworkX (for graph operations)
+
+## References
+
+* Nicholls, G. K., Lee, J. E., Karn, N., Johnson, D., Huang, R., & Muir-Watt, A. (2024). [Bayesian Inference for Partial Orders from Random Linear Extensions: Power Relations from 12th Century Royal Acta](https://doi.org/10.48550/arXiv.2212.05524)*
+* Chuxuan, Jiang, C., Nicholls, G. K., & Lee, J. E. (2023). [Bayesian Inference for Vertex-Series-Parallel Partial Orders](http://arxiv.org/abs/2306.15827).
+* Nicholls, G. K. and Muir Watt, A. (2011). **Partial Order Models for Episcopal Social Status in 12th Century England.** *Proceedings of the 26th International Workshop on Statistical Modelling (Valencia, Spain), July 5–11, 2011*, pp. 437–440.

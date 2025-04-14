@@ -7,7 +7,7 @@ import yaml
 import numpy as np
 import networkx as nx
 import math
-from typing import List, Dict, Set, Optional, Any
+from typing import List, Dict, Set, Any, Optional
 import itertools
 from functools import lru_cache
 
@@ -69,6 +69,59 @@ class BasicUtils:
                         value[subkey] = BasicUtils.transitive_reduction(subval)
             elif isinstance(value, np.ndarray):
                 h_U[key] = BasicUtils.transitive_reduction(value)
+    @staticmethod
+    def generate_all_linear_extensions(h: np.ndarray, items: Optional[List[Any]] = None) -> List[List[Any]]:
+        """
+        Generate all linear extensions (i.e. valid total orders) of a partial order
+        represented by the adjacency matrix h. Here, h is an n x n matrix where h[i, j] == 1
+        means that index i must precede index j. The items are by default the indices [0,1,...,n-1],
+        but if a list 'items' is provided, it will be used to map indices to actual items.
+
+        Parameters:
+            h: n x n numpy array representing the partial order.
+            items: Optional list of items corresponding to the indices of h.
+                If None, items are assumed to be [0, 1, ..., n-1].
+
+        Returns:
+            A list of linear extensions, each represented as a list of items (or indices if items is None).
+        """
+        n = h.shape[0]
+        if items is None:
+            items = list(range(n))        
+        def _recursive_extensions(h_sub: np.ndarray, remaining: List[int]) -> List[List[int]]:
+            # Base case: if no elements remain, return an empty extension.
+            if not remaining:
+                return [[]]
+            
+            m = len(remaining)
+            # Compute in-degrees for the current submatrix.
+            in_degree = [0] * m
+            for i in range(m):
+                for j in range(m):
+                    if h_sub[i, j]:
+                        in_degree[j] += 1
+            
+            # Minimal elements are those with in-degree zero.
+            minimal_indices = [i for i, d in enumerate(in_degree) if d == 0]
+            
+            extensions = []
+            for idx in minimal_indices:
+                # 'current' is the actual index from the original set.
+                current = remaining[idx]
+                # Remove the minimal element from the remaining list.
+                new_remaining = remaining[:idx] + remaining[idx+1:]
+                # Remove the corresponding row and column from the matrix.
+                new_h = np.delete(np.delete(h_sub, idx, axis=0), idx, axis=1)
+                # Recursively generate extensions for the reduced poset.
+                for ext in _recursive_extensions(new_h, new_remaining):
+                    extensions.append([current] + ext)
+            return extensions
+
+        # Start the recursion with all indices [0, 1, ..., n-1].
+        index_extensions = _recursive_extensions(h, list(range(n)))
+        # Map the indices to actual items if provided.
+        extensions = [[items[i] for i in extension] for extension in index_extensions]
+        return extensions
 
     @staticmethod
     def build_Sigma_rho(K: int, rho_val: float) -> np.ndarray:
