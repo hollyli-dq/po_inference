@@ -1,7 +1,10 @@
 # Bayesian Partial Order Inference
 
+<<<<<<< HEAD
 # Bayesian Partial Order Inference
 
+=======
+>>>>>>> 7a1036b95df07a48a8d1c3c3dfc457f418c20536
 A Python package for Bayesian inference of strong partial orders from noisy observations using Markov Chain Monte Carlo (MCMC) methods. This implementation is based on the framework described in Nicholls, G. K. and Muir Watt, A. (2011).
 
 ## Features
@@ -42,7 +45,11 @@ The model uses a latent space representation where:
 
 - Each item $j$ has a $K$-dimensional latent position $U_j \in \mathbb{R}^K$.
 - The correlation between dimensions is controlled by parameter $\rho$.
+<<<<<<< HEAD
 - The transformed latent positions $\eta_i$ are given by $\eta_i = G^{-1}\bigl(\Phi(U_{j,:})\bigr) + \alpha_i$, where $\alpha_i$ represents covariate effects, e.g. $\beta_j \times x_j$.
+=======
+- The transformed latent positions $\eta_i$ are given by $\eta_i = U_i + \alpha_i$, where $\alpha_i$ represents covariate effects, e.g. $\beta_j \times x_j$.
+>>>>>>> 7a1036b95df07a48a8d1c3c3dfc457f418c20536
 
 The mapping from $\eta$ to the partial order $h$ is defined as:
 
@@ -77,8 +84,13 @@ We sample from this posterior using MCMC. Specific update steps include:
 
 **The likelihood function** incorporates:
 
+<<<<<<< HEAD
   - Partial order constraints
   - Noise models (queue-jump or Mallows)
+=======
+- Partial order constraints
+- Noise models (queue-jump or Mallows)
+>>>>>>> 7a1036b95df07a48a8d1c3c3dfc457f418c20536
 
 ## Project structure
 
@@ -207,6 +219,7 @@ The analysis generates several outputs:
 * Nicholls, G. K., Lee, J. E., Karn, N., Johnson, D., Huang, R., & Muir-Watt, A. (2024). [Bayesian Inference for Partial Orders from Random Linear Extensions: Power Relations from 12th Century Royal Acta](https://doi.org/10.48550/arXiv.2212.05524)*
 * Chuxuan, Jiang, C., Nicholls, G. K., & Lee, J. E. (2023). [Bayesian Inference for Vertex-Series-Parallel Partial Orders](http://arxiv.org/abs/2306.15827).
 * Nicholls, G. K. and Muir Watt, A. (2011). **Partial Order Models for Episcopal Social Status in 12th Century England.** *Proceedings of the 26th International Workshop on Statistical Modelling (Valencia, Spain), July 5–11, 2011*, pp. 437–440.
+<<<<<<< HEAD
 
 A Python package for Bayesian inference of strong partial orders from noisy observations using Markov Chain Monte Carlo (MCMC) methods. This implementation is based on the framework described in Nicholls, G. K. and Muir Watt, A. (2011).
 
@@ -413,3 +426,5 @@ The analysis generates several outputs:
 * Nicholls, G. K., Lee, J. E., Karn, N., Johnson, D., Huang, R., & Muir-Watt, A. (2024). [Bayesian Inference for Partial Orders from Random Linear Extensions: Power Relations from 12th Century Royal Acta](https://doi.org/10.48550/arXiv.2212.05524)*
 * Chuxuan, Jiang, C., Nicholls, G. K., & Lee, J. E. (2023). [Bayesian Inference for Vertex-Series-Parallel Partial Orders](http://arxiv.org/abs/2306.15827).
 * Nicholls, G. K. and Muir Watt, A. (2011). **Partial Order Models for Episcopal Social Status in 12th Century England.** *Proceedings of the 26th International Workshop on Statistical Modelling (Valencia, Spain), July 5–11, 2011*, pp. 437–440.
+=======
+>>>>>>> 7a1036b95df07a48a8d1c3c3dfc457f418c20536
