@@ -1,10 +1,5 @@
 # Bayesian Partial Order Inference
 
-<<<<<<< HEAD
-# Bayesian Partial Order Inference
-
-=======
->>>>>>> 7a1036b95df07a48a8d1c3c3dfc457f418c20536
 A Python package for Bayesian inference of strong partial orders from noisy observations using Markov Chain Monte Carlo (MCMC) methods. This implementation is based on the framework described in Nicholls, G. K. and Muir Watt, A. (2011).
 
 ## Features
