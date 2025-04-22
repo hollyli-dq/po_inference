@@ -2,18 +2,87 @@ import numpy as np
 import networkx as nx
 import random
 import math
+from typing import List, Dict, Any
 from collections import defaultdict
 from scipy.stats import multivariate_normal, beta, gamma, expon, norm
-from typing import List, Dict, Any, Optional, Tuple
+from typing import List, Dict, Tuple, Union
 
 from .basic_utils import BasicUtils
 
 class StatisticalUtils:
     """
     Utility class for statistical computations related to partial orders.
-    """
+    """   
+    @staticmethod
+    def rBetaPrior(sigma_beta: Union[float, np.ndarray], p: int) -> np.ndarray:
+        """
+        Sample a new beta from a Normal(0, Sigma) distribution, where Sigma is a diagonal matrix.
+        
+        Parameters:
+        -----------
+        sigma_beta: float or np.ndarray
+            If scalar: the same prior std dev for each coefficient (diagonal elements will be sigma_beta^2)
+            If array: different prior std dev for each coefficient (must have length p)
+        p: integer
+            Dimension of beta.
+        
+        Returns:
+        --------
+        np.ndarray
+            Sampled beta vector of shape (p,)
+        """
+        if np.isscalar(sigma_beta):
+            return np.random.normal(loc=0.0, scale=sigma_beta, size=(p,))
+        else:
+            if len(sigma_beta) != p:
+                raise ValueError(f"If sigma_beta is an array, it must have length {p}")
+            return np.random.normal(loc=0.0, scale=sigma_beta, size=(p,))
 
     @staticmethod
+    def dBetaprior(beta: np.ndarray, sigma_beta: Union[float, np.ndarray]) -> float:
+        """
+        Log-pdf of a multivariate Normal(0, Sigma) at point 'beta', where Sigma is a diagonal matrix.
+        
+        Parameters:
+        -----------
+        beta: shape (p,)
+            Vector of coefficients
+        sigma_beta: float or np.ndarray of shape (p,)
+            The prior standard deviation(s) for each coefficient.
+            Can be either a scalar (same std dev for all coefficients) or an array (different std dev per coefficient)
+        
+        Returns:
+        --------
+        float
+            The log-density value
+            
+        Notes:
+        ------
+        When sigma_beta is a scalar, formula is:
+          - (p/2) * log(2*pi) 
+          - p*log(sigma_beta)
+          - (1 / (2*sigma_beta^2)) * sum(beta^2)
+          
+        When sigma_beta is an array, formula is:
+          - (p/2) * log(2*pi) 
+          - sum(log(sigma_beta))  # sum of logs instead of p times log of one value
+          - sum(beta^2 / (2*sigma_beta^2))  # element-wise division by the variances
+        """
+        p = len(beta)
+        
+        if np.isscalar(sigma_beta):
+            # Original implementation for scalar sigma_beta
+            log_det_part = -0.5 * p * math.log(2.0 * math.pi) - p * math.log(sigma_beta)
+            quad_part = -0.5 * np.sum(beta**2) / (sigma_beta**2)
+        else:
+            # Handle array case
+            if len(sigma_beta) != p:
+                raise ValueError(f"sigma_beta must be a scalar or have length {p} to match beta")
+            
+            log_det_part = -0.5 * p * math.log(2.0 * math.pi) - np.sum(np.log(sigma_beta))
+            quad_part = -0.5 * np.sum(beta**2 / (sigma_beta**2))
+            
+        return log_det_part + quad_part   
     def count_unique_partial_orders(h_trace):
         """
         Count the frequency of each unique partial order in h_trace.

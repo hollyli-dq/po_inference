@@ -18,21 +18,24 @@ def mcmc_partial_order(
     choice_sets: List[List[int]],
     num_iterations: int,
     K: int,
+    X: np.ndarray,
     dr: float,  # multiplicative step size for rho
+    drbeta: float,  # multiplicative step size for beta
     sigma_mallow: float,
+    sigma_beta: float,
     noise_option: str,
     mcmc_pt: List[float],
     rho_prior: float, 
     noise_beta_prior: float,
     mallow_ua: float,
-    alpha: float 
+    random_seed: int
 ) -> Dict[str, Any]:
 
 
     # ----------------------------------------------------------------
     # 1. Setup: Map items to indices, initialize states, seed, etc.
     # ----------------------------------------------------------------
-
+    rng = np.random.default_rng(random_seed)
     items = sorted(set(itertools.chain.from_iterable(choice_sets)))
     n = len(items)
     item_to_index = {item: idx for idx, item in enumerate(items)}
@@ -45,6 +48,12 @@ def mcmc_partial_order(
 
     # Initialize MCMC state.
     Z = np.zeros((n, K), dtype=float)  # latent matrix
+
+    p = X.shape[0]
+    print(f"p value is : {p}")
+    beta= rng.normal(loc=0.0, scale=sigma_beta, size=(p,))
+    alpha = X.T @ beta
+    Sigma_prop = (drbeta**2) * (sigma_beta**2) * np.eye(p)
     eta= StatisticalUtils.transform_U_to_eta(Z, alpha)
     h_Z = BasicUtils.generate_partial_order(eta)  # partial order from Z
 
@@ -60,9 +69,11 @@ def mcmc_partial_order(
     # ----------------------------------------------------------------
     Z_trace = []
     rho_trace = []
+    beta_trace = []
     prob_noise_trace = []
     mallow_theta_trace = []
     proposed_rho_vals = []
+    proposed_beta_vals = []
     proposed_prob_noise_vals = []
     proposed_mallow_theta_vals = []
     proposed_Zs = []
@@ -78,7 +89,7 @@ def mcmc_partial_order(
     progress_intervals = [int(num_iterations * frac) for frac in np.linspace(0.1, 1.0, 10)]
 
     # Unpack update probabilities for clarity.
-    rho_pct, noise_pct, U_pct = mcmc_pt
+    rho_pct, noise_pct, U_pct, beta_pct = mcmc_pt
 
     # ----------------------------------------------------------------
     # 3. Main MCMC Loop
@@ -220,10 +231,46 @@ def mcmc_partial_order(
                 acceptance_decisions.append(0)
             proposed_Zs.append(Z_prime)
 
+        else:
+            epsilon =  rng.multivariate_normal(np.zeros(p), Sigma_prop)
+            beta_prime = beta + epsilon
+            alpha_prime = X.T @ beta_prime   
+            eta_prime = StatisticalUtils.transform_U_to_eta(Z, alpha_prime)
+            h_Z_prime = BasicUtils.generate_partial_order(eta_prime)
+
+            lp_current = StatisticalUtils.dBetaprior(beta,sigma_beta)
+            lp_proposed = StatisticalUtils.dBetaprior(beta_prime,sigma_beta)
+            llk_current = LogLikelihoodCache.calculate_log_likelihood(
+                Z, h_Z, observed_orders_idx, choice_sets, item_to_index,
+                prob_noise, mallow_theta, noise_option
+            )
+            llk_prime = LogLikelihoodCache.calculate_log_likelihood(
+                Z, h_Z_prime, observed_orders_idx, choice_sets, item_to_index,
+                prob_noise, mallow_theta, noise_option
+            )
+            log_acceptance_ratio = (lp_proposed + llk_prime) - (lp_current + llk_current)
+            acceptance_probability = min(1.0, np.exp(log_acceptance_ratio))
+
+
+            log_likelihood_currents.append(llk_current)
+            log_likelihood_primes.append(llk_prime)
+            
+            if random.random() < acceptance_probability:
+                beta = beta_prime
+                alpha = alpha_prime
+                h_Z = h_Z_prime
+                num_acceptances += 1
+                acceptance_decisions.append(1)
+            else:
+                acceptance_decisions.append(0)
+            proposed_beta_vals.append(beta_prime)
+                
+
         # Store current state. 
         if iteration % 100 == 0:
             Z_trace.append(Z.copy())
             h_trace.append(h_Z.copy())
+            beta_trace.append(beta.copy())
             rho_trace.append(rho)
             prob_noise_trace.append(prob_noise)
             mallow_theta_trace.append(mallow_theta)
@@ -243,9 +290,11 @@ def mcmc_partial_order(
         "index_to_item": index_to_item,
         "item_to_index": item_to_index,
         "rho_trace": rho_trace,
+        "beta_trace": beta_trace,
         "prob_noise_trace": prob_noise_trace,
         "mallow_theta_trace": mallow_theta_trace,
         "proposed_rho_vals": proposed_rho_vals,
+        "proposed_beta_vals": proposed_beta_vals,
         "proposed_prob_noise_vals": proposed_prob_noise_vals,
         "proposed_mallow_theta_vals": proposed_mallow_theta_vals,
         "proposed_Zs": proposed_Zs,

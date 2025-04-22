@@ -473,3 +473,69 @@ class POPlot:
         ax.set_title(title)
         plt.tight_layout()
         return fig
+    
+    @staticmethod
+
+    def plot_beta_parameters(mcmc_results: Dict[str, Any],
+                            true_param: Dict[str, Any],
+                            config: Dict[str, Any],
+                            burn_in: int = 100,
+                            output_filepath: str = ".") -> None:
+        """
+        Plot each component of beta in a separate figure. Each figure has two subplots:
+        one for the trace and one for the density. Font sizes for beta labels are set very small.
+        
+        Assumes that mcmc_results["beta_trace"] is a 2D array with shape (n_samples, p),
+        and that true_param["beta_true"] is a NumPy array of length p.
+        """
+        sns.set_style("whitegrid")
+        # Use a small font for beta plots.
+        beta_font = {
+            'title': 8,
+            'label': 7,
+            'legend': 6,
+            'ticks': 6
+        }
+        
+        # Extract beta trace and true beta
+        beta_trace = np.array(mcmc_results.get("beta_trace", []))
+        if beta_trace.size == 0:
+            print("No beta trace available.")
+            return
+        beta_trace = beta_trace[burn_in:]
+        true_beta = true_param.get("beta_true", None)
+        
+        # Determine dimensions
+        n_samples, p_dim = beta_trace.shape
+        
+        # Create one separate figure per beta coefficient.
+        for d in range(p_dim):
+            fig, (ax_trace, ax_hist) = plt.subplots(1, 2, figsize=(8, 3))
+            iterations = np.arange(burn_in + 1, burn_in + 1 + n_samples)
+            
+            # TRACE subplot for beta_d
+            ax_trace.plot(iterations, beta_trace[:, d], color=plt.cm.tab10(d), lw=1.2, alpha=0.8)
+            ax_trace.set_title(f"β{d} Trace", fontsize=beta_font['title'])
+            ax_trace.set_xlabel("Iteration", fontsize=beta_font['label'])
+            ax_trace.set_ylabel("β value", fontsize=beta_font['label'])
+            ax_trace.tick_params(axis='both', labelsize=beta_font['ticks'])
+            ax_trace.grid(True, alpha=0.3)
+            
+            # DENSITY subplot for beta_d
+            sns.histplot(beta_trace[:, d], kde=True, ax=ax_hist, color=plt.cm.tab10(d), alpha=0.5)
+            ax_hist.set_title(f"β{d} Density", fontsize=beta_font['title'])
+            ax_hist.set_xlabel("β value", fontsize=beta_font['label'])
+            ax_hist.set_ylabel("Count", fontsize=beta_font['label'])
+            ax_hist.tick_params(axis='both', labelsize=beta_font['ticks'])
+            if true_beta is not None and d < len(true_beta):
+                ax_hist.axvline(true_beta[d], color=plt.cm.tab10(d), linestyle='--', lw=1,
+                                label="True β")
+            sample_mean = np.mean(beta_trace[:, d])
+            ax_hist.axvline(sample_mean, color='green', linestyle='--', lw=1, label="Sample Mean")
+            ax_hist.legend(fontsize=beta_font['legend'])
+            
+            plt.tight_layout()
+            outname = os.path.join(output_filepath, f"beta_{d}_plot.pdf")
+            plt.savefig(outname, dpi=300, bbox_inches='tight')
+            print(f"[INFO] Saved beta coefficient {d} plot to '{outname}'")
+            plt.show()

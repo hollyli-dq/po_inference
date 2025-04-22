@@ -14,9 +14,12 @@ def mcmc_partial_order_k(
     choice_sets: List[List[int]],
     num_iterations: int,
     # Update for rho:
+    X: np.ndarray,
     dr: float,  # multiplicative step size for rho
+    drbeta: float,  # multiplicative step size for beta
     # Parameter controlling random-walk for mallow_theta:
     sigma_mallow: float,
+    sigma_beta: float,
     noise_option: str,
     mcmc_pt: List[float],
 
@@ -24,9 +27,8 @@ def mcmc_partial_order_k(
     rho_prior, 
     noise_beta_prior: float,
     mallow_ua: float,
-    alpha: float,
-    K_prior: float
-    
+    K_prior: float,
+    random_seed: int
 ) -> Dict[str, Any]:
     """
     Perform MCMC sampling to infer the partial order h, plus parameters (rho, prob_noise, mallow_theta).
@@ -53,12 +55,18 @@ def mcmc_partial_order_k(
     ]
 
 
-
-    K = K_prior  # Initial number of latent dimensions from the mean of the k prior 
+    rng = np.random.default_rng(random_seed)
+    K = 1 # Initial number of latent dimensions from the mean of the k prior 
     # Initialize MCMC state.
     Z = np.zeros((n, K), dtype=float)  # latent matrix
+    p = X.shape[0]
+
+    beta= rng.normal(loc=0.0, scale=sigma_beta, size=(p,))
+    alpha = X.T @ beta
+    Sigma_prop = (drbeta**2) * (sigma_beta**2) * np.eye(p)
     eta= StatisticalUtils.transform_U_to_eta(Z, alpha)
     h_Z = BasicUtils.generate_partial_order(eta)  # partial order from Z
+
 
     # Initialize parameters using the provided prior hyperparameters.
     rho = StatisticalUtils.rRprior(rho_prior)  # initial rho from its prior
@@ -73,15 +81,18 @@ def mcmc_partial_order_k(
     Z_trace = []
     h_trace = []
     K_trace=[]
+    beta_trace = []
     update_records=[]
 
 
     rho_trace = []
     prob_noise_trace = []
     mallow_theta_trace = []
+
     proposed_rho_vals = []
     proposed_prob_noise_vals = []
     proposed_mallow_theta_vals = []
+    proposed_beta_vals=[ ]
     proposed_Zs = []
     acceptance_decisions = []
     acceptance_rates = []
@@ -103,7 +114,11 @@ def mcmc_partial_order_k(
     progress_intervals = [int(num_iterations * frac) for frac in np.linspace(0.1, 1.0, 10)]
 
     # Unpack update probabilities for clarity.
-    rho_pct, noise_pct, U_pct , K_pct = mcmc_pt
+    rho_pct, noise_pct, U_pct , beta_pct, K_pct = mcmc_pt
+    llk_current=-float("inf")
+    llk_prime=-float("inf")
+
+
 
     # ----------------------------------------------------------------
     # 3. Main MCMC Loop
@@ -121,7 +136,10 @@ def mcmc_partial_order_k(
         iteration_list.append(iteration)
         accepted_this_iter = False
         update_category = None
-        
+        llk_prime = LogLikelihoodCache.calculate_log_likelihood(
+                    Z, h_Z, observed_orders_idx, choice_sets, item_to_index,
+                    prob_noise, mallow_theta, noise_option
+                )     
         # ---- A) Update rho ----
         if r < rho_pct:
             update_category = "rho"  # For timing
@@ -134,10 +152,6 @@ def mcmc_partial_order_k(
             log_prior_current = StatisticalUtils.dRprior(rho,rho_prior) + StatisticalUtils.log_U_prior(Z, rho, K)
             log_prior_proposed = StatisticalUtils.dRprior(rho_prime,rho_prior) + StatisticalUtils.log_U_prior(Z, rho_prime, K)
 
-            llk_current = LogLikelihoodCache.calculate_log_likelihood(
-                Z, h_Z, observed_orders_idx, choice_sets, item_to_index,
-                prob_noise, mallow_theta, noise_option
-            )
             # Since Z is unchanged, we use the same likelihood.
             llk_prime=llk_current 
 
@@ -152,6 +166,7 @@ def mcmc_partial_order_k(
                 num_acceptances += 1
                 acceptance_decisions.append(1)
                 accepted_this_iter = True
+                llk_current=llk_prime
             else:
                 acceptance_decisions.append(0)
             proposed_rho_vals.append(rho_prime)
@@ -167,17 +182,10 @@ def mcmc_partial_order_k(
                 log_prior_current = StatisticalUtils.dTprior(mallow_theta, ua=mallow_ua)
                 log_prior_proposed = StatisticalUtils.dTprior(mallow_theta_prime, ua=mallow_ua)
 
-                llk_current = LogLikelihoodCache.calculate_log_likelihood(
-                    Z, h_Z, observed_orders_idx, choice_sets, item_to_index,
-                    prob_noise, mallow_theta, noise_option
-                )
                 llk_prime = LogLikelihoodCache.calculate_log_likelihood(
                     Z, h_Z, observed_orders_idx, choice_sets, item_to_index,
                     prob_noise, mallow_theta_prime, noise_option
                 )
-
-
-
                 log_acceptance_ratio = (log_prior_proposed + llk_prime) - (log_prior_current + llk_current)+ np.log(mallow_theta / mallow_theta_prime)
                 acceptance_probability = min(1.0, np.exp(log_acceptance_ratio))
                 if random.random() < acceptance_probability:
@@ -185,6 +193,7 @@ def mcmc_partial_order_k(
                     num_acceptances += 1
                     acceptance_decisions.append(1)
                     accepted_this_iter = True
+                    llk_current=llk_prime
                 else:
                     acceptance_decisions.append(0)
                 proposed_mallow_theta_vals.append(mallow_theta_prime)
@@ -195,10 +204,7 @@ def mcmc_partial_order_k(
                 log_prior_current = StatisticalUtils.dPprior(prob_noise, beta_param=noise_beta_prior)
                 log_prior_proposed = StatisticalUtils.dPprior(prob_noise_prime, beta_param=noise_beta_prior)
 
-                llk_current =LogLikelihoodCache.calculate_log_likelihood(
-                    Z, h_Z, observed_orders_idx, choice_sets, item_to_index,
-                    prob_noise, mallow_theta, noise_option
-                )
+
                 llk_prime = LogLikelihoodCache.calculate_log_likelihood(
                     Z, h_Z, observed_orders_idx, choice_sets, item_to_index,
                     prob_noise_prime, mallow_theta, noise_option
@@ -213,12 +219,13 @@ def mcmc_partial_order_k(
                     num_acceptances += 1
                     accepted_this_iter = True
                     acceptance_decisions.append(1)
+                    llk_current=llk_prime
                 else:
                     acceptance_decisions.append(0)
                 proposed_prob_noise_vals.append(prob_noise_prime)
-
+        
         # ---- C) Update U (latent matrix Z) via a single row update ----
-        elif r <= (rho_pct + noise_pct + U_pct):
+        elif r <= (rho_pct + noise_pct +  U_pct):
             update_category = "U"
             i = random.randint(0, n - 1)
             current_row = Z[i, :].copy()
@@ -237,10 +244,7 @@ def mcmc_partial_order_k(
             log_prior_current = StatisticalUtils.log_U_prior(Z, rho, K)
             log_prior_proposed = StatisticalUtils.log_U_prior(Z_prime, rho, K)
 
-            llk_current =LogLikelihoodCache.calculate_log_likelihood(
-                Z, h_Z, observed_orders_idx, choice_sets, item_to_index,
-                prob_noise, mallow_theta, noise_option
-            )
+
             llk_prime = LogLikelihoodCache.calculate_log_likelihood(
                 Z_prime, h_Z_prime, observed_orders_idx, choice_sets, item_to_index,
                 prob_noise, mallow_theta, noise_option
@@ -256,10 +260,44 @@ def mcmc_partial_order_k(
                 num_acceptances += 1
                 acceptance_decisions.append(1)
                 accepted_this_iter = True
+                llk_current=llk_prime
             else:
                 acceptance_decisions.append(0)
             proposed_Zs.append(Z_prime)
-        elif r <= (rho_pct + noise_pct + U_pct + K_pct):
+
+        elif r <= (rho_pct + noise_pct + beta_pct + U_pct ):
+            update_category = "beta"
+            epsilon =  rng.multivariate_normal(np.zeros(p), Sigma_prop)
+            beta_prime = beta + epsilon
+            alpha_prime = X.T @ beta_prime   
+            eta_prime = StatisticalUtils.transform_U_to_eta(Z, alpha_prime)
+            h_Z_prime = BasicUtils.generate_partial_order(eta_prime)
+
+            lp_current = StatisticalUtils.dBetaprior(beta,sigma_beta)
+            lp_proposed = StatisticalUtils.dBetaprior(beta_prime,sigma_beta)
+
+            llk_prime = LogLikelihoodCache.calculate_log_likelihood(
+                Z, h_Z_prime, observed_orders_idx, choice_sets, item_to_index,
+                prob_noise, mallow_theta, noise_option
+            )
+            log_acceptance_ratio = (lp_proposed + llk_prime) - (lp_current + llk_current)
+            acceptance_probability = min(1.0, np.exp(log_acceptance_ratio))
+
+
+
+            
+            if random.random() < acceptance_probability:
+                beta = beta_prime
+                alpha = alpha_prime
+                h_Z = h_Z_prime
+                num_acceptances += 1
+                acceptance_decisions.append(1)
+                llk_current=llk_prime
+            else:
+                acceptance_decisions.append(0)
+            proposed_beta_vals.append(beta_prime)           
+    
+        else:
             update_category = "K"
             if K == 1:
                 move = "up"
@@ -278,10 +316,12 @@ def mcmc_partial_order_k(
                 log_prior_K = StatisticalUtils.dKprior(K, K_prior)
                 log_prior_K_prime = StatisticalUtils.dKprior(K_prime, K_prior)
 
+
                 llk_current = LogLikelihoodCache.calculate_log_likelihood(
                     Z, h_Z, observed_orders_idx, choice_sets,
                     item_to_index, prob_noise, mallow_theta, noise_option
-                )
+                )#
+
                 llk_prime = LogLikelihoodCache.calculate_log_likelihood(
                     Z_prime, h_Z_prime, observed_orders_idx, choice_sets,
                     item_to_index, prob_noise, mallow_theta, noise_option
@@ -300,6 +340,7 @@ def mcmc_partial_order_k(
                     num_acceptances += 1
                     acceptance_decisions.append(1)
                     accepted_this_iter = True
+                    llk_current=llk_prime
                 else:
                     acceptance_decisions.append(0)
 
@@ -314,18 +355,15 @@ def mcmc_partial_order_k(
                 h_Z_prime = BasicUtils.generate_partial_order(eta_prime)
 
                 log_prior_K = StatisticalUtils.dKprior(K, K_prior)
-                log_prior_Kprime = StatisticalUtils.dKprior(K_prime, K_prior)
+                log_prior_K_prime = StatisticalUtils.dKprior(K_prime, K_prior)
 
-                llk_current = LogLikelihoodCache.calculate_log_likelihood(
-                    Z, h_Z, observed_orders_idx, choice_sets,
-                    item_to_index, prob_noise, mallow_theta, noise_option
-                )
+
                 llk_prime = LogLikelihoodCache.calculate_log_likelihood(
                     Z_prime, h_Z_prime, observed_orders_idx, choice_sets,
                     item_to_index, prob_noise, mallow_theta, noise_option
                 )
 
-                log_acc = (log_prior_Kprime + llk_prime) - (log_prior_K + llk_current)
+                log_acc = (log_prior_K_prime + llk_prime) - (log_prior_K + llk_current)
                 accept_prob = min(1.0, np.exp(log_acc))
 
                 if random.random() < accept_prob:
@@ -335,6 +373,7 @@ def mcmc_partial_order_k(
                     num_acceptances += 1
                     acceptance_decisions.append(1)
                     accepted_this_iter = True
+                    llk_current=llk_prime
                 else:
                     acceptance_decisions.append(0)
 
@@ -343,6 +382,7 @@ def mcmc_partial_order_k(
             Z_trace.append(Z.copy())
             h_trace.append(h_Z.copy())
             K_trace.append(K)
+            beta_trace.append(beta)
             rho_trace.append(rho)
             prob_noise_trace.append(prob_noise)
             mallow_theta_trace.append(mallow_theta)
@@ -364,6 +404,7 @@ def mcmc_partial_order_k(
         "Z_trace": Z_trace,
         "h_trace": h_trace,
         "K_trace": K_trace,
+        "beta_trace": beta_trace,
         "index_to_item": index_to_item,
         "item_to_index": item_to_index,
         "rho_trace": rho_trace,
@@ -372,6 +413,7 @@ def mcmc_partial_order_k(
         "proposed_rho_vals": proposed_rho_vals,
         "proposed_prob_noise_vals": proposed_prob_noise_vals,
         "proposed_mallow_theta_vals": proposed_mallow_theta_vals,
+        "proposed_beta_vals": proposed_beta_vals,
         "proposed_Zs": proposed_Zs,
         "acceptance_rates": acceptance_rates,
         "acceptance_decisions": acceptance_decisions,
